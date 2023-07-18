@@ -1,0 +1,70 @@
+app-id: 'se.icedev.pm3'
+
+runtime: 'org.kde.Platform'
+runtime-version: '5.15-22.08'
+sdk: 'org.kde.Sdk'
+
+command: 'pm3'
+rename-icon: proxmark3
+rename-desktop-file: proxmark3.desktop
+
+cleanup:
+  - '/share/info'
+  - '/share/man'
+  #- '/lib/udev/rules.d'
+
+finish-args:
+  # Default Proxmark config directory
+  - '--filesystem=home/.proxmark3'
+  # Allow device access for wired connectivity
+  - '--device=all'
+  # Allow Bluetooth for RDV4 wireless connectivity
+  - '--allow=bluetooth'
+
+modules:
+  - name: arm_toolchain
+    buildsystem: simple
+    # Change the following to use another version
+    sources:
+      - type: file
+        only-arches:
+          - x86_64
+        url: 'https://developer.arm.com/-/media/Files/downloads/gnu/12.2.mpacbti-rel1/binrel/arm-gnu-toolchain-12.2.mpacbti-rel1-x86_64-arm-none-eabi.tar.xz'
+        sha256: 17455a06c816031cc2c66243c117cba48463cd6a3a3fdfac7275b4e9c40eb314
+        dest-filename: arm-gnu-toolchain.tar.xz
+      - type: file
+        only-arches:
+          - aarch64
+        url: 'https://developer.arm.com/-/media/Files/downloads/gnu/12.2.mpacbti-rel1/binrel/arm-gnu-toolchain-12.2.mpacbti-rel1-aarch64-arm-none-eabi.tar.xz'
+        sha256: c05f827f8a2b706edccd622716f52a7b1c2a30f3e4ec6a95f187b323ee83109c
+        dest-filename: arm-gnu-toolchain.tar.xz
+    build-commands:
+        - tar -xf arm-gnu-toolchain.tar.xz --strip-components=1 -C $FLATPAK_DEST
+    cleanup:
+      - '*'
+
+  - name: 'proxmark3'
+    no-autogen: true
+    make-args:
+      - 'PLATFORM=PM3GENERIC'
+      - 'SKIPQT=0'
+    make-install-args:
+      - 'PREFIX=/app'
+      - 'UDEV_PREFIX=/app/lib/udev/rules.d'
+    sources:
+      - type: git
+        url: 'https://github.com/RfidResearchGroup/proxmark3.git'
+        commit: 'bc18dbd847775a0491c1f919f55f7160a42b95f9'
+
+  - name: 'desktop'
+    buildsystem: simple
+    sources:
+      - type: file
+        path: proxmark3.desktop
+      - type: file
+        path: proxmark3.png
+    build-commands:
+      - 'mkdir -p ${FLATPAK_DEST}/share/applications/'
+      - 'mkdir -p ${FLATPAK_DEST}/share/icons/hicolor/256x256/apps/'
+      - 'install -m644 proxmark3.desktop ${FLATPAK_DEST}/share/applications/'
+      - 'install -m644 proxmark3.png ${FLATPAK_DEST}/share/icons/hicolor/256x256/apps/'
