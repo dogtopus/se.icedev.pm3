@@ -1,0 +1,21 @@
+name: arm_toolchain
+buildsystem: simple
+# Change the following to use another version
+sources:
+  - type: file
+    only-arches:
+      - x86_64
+    url: 'https://armkeil.blob.core.windows.net/developer/files/downloads/gnu/15.2.rel1/binrel/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi.tar.xz'
+    sha256: 597893282ac8c6ab1a4073977f2362990184599643b4c5ee34870a8215783a16
+    dest-filename: arm-gnu-toolchain.tar.xz
+  - type: file
+    only-arches:
+      - aarch64
+    url: 'https://armkeil.blob.core.windows.net/developer/files/downloads/gnu/15.2.rel1/binrel/arm-gnu-toolchain-15.2.rel1-aarch64-arm-none-eabi.tar.xz'
+    sha256: d061559d814b205ed30c5b7c577c03317ec447ca51cd5a159d26b12a5bbeb20c
+    dest-filename: arm-gnu-toolchain.tar.xz
+build-commands:
+    - tar -xf arm-gnu-toolchain.tar.xz --strip-components=1 -C $FLATPAK_DEST
+# Do not include the compiler into the final package.
+cleanup:
+  - '*'

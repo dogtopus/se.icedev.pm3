@@ -1,5 +1,7 @@
 app-id: 'se.icedev.pm3'
 
+x-pm3-version: &pm3-version 'v4.20728'
+
 runtime: 'org.kde.Platform'
 runtime-version: '5.15-25.08'
 sdk: 'org.kde.Sdk'
@@ -8,10 +10,21 @@ command: 'pm3'
 rename-icon: proxmark3
 rename-desktop-file: proxmark3.desktop
 
+add-extensions:
+  se.icedev.pm3.firmware:
+    version: *pm3-version
+    directory: share/proxmark3/firmware/extras
+    subdirectories: true
+    no-autodownload: true
+    autodelete: true
+
 cleanup:
   - '/share/info'
   - '/share/man'
   #- '/lib/udev/rules.d'
+
+cleanup-commands:
+  - mkdir -p ${FLATPAK_DEST}/share/proxmark3/firmware/extras
 
 finish-args:
   # Default Proxmark config directory
@@ -22,26 +35,7 @@ finish-args:
   - '--allow=bluetooth'
 
 modules:
-  - name: arm_toolchain
-    buildsystem: simple
-    # Change the following to use another version
-    sources:
-      - type: file
-        only-arches:
-          - x86_64
-        url: 'https://armkeil.blob.core.windows.net/developer/files/downloads/gnu/15.2.rel1/binrel/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi.tar.xz'
-        sha256: 597893282ac8c6ab1a4073977f2362990184599643b4c5ee34870a8215783a16
-        dest-filename: arm-gnu-toolchain.tar.xz
-      - type: file
-        only-arches:
-          - aarch64
-        url: 'https://armkeil.blob.core.windows.net/developer/files/downloads/gnu/15.2.rel1/binrel/arm-gnu-toolchain-15.2.rel1-aarch64-arm-none-eabi.tar.xz'
-        sha256: d061559d814b205ed30c5b7c577c03317ec447ca51cd5a159d26b12a5bbeb20c
-        dest-filename: arm-gnu-toolchain.tar.xz
-    build-commands:
-        - tar -xf arm-gnu-toolchain.tar.xz --strip-components=1 -C $FLATPAK_DEST
-    cleanup:
-      - '*'
+  - 'arm-gnu-toolchain.yaml'
 
   - name: 'proxmark3'
     no-autogen: true
@@ -54,7 +48,7 @@ modules:
     sources:
       - type: git
         url: 'https://github.com/RfidResearchGroup/proxmark3.git'
-        tag: 'v4.20728'
+        tag: *pm3-version
 
   - name: 'desktop'
     buildsystem: simple
@@ -63,8 +57,11 @@ modules:
         path: proxmark3.desktop
       - type: file
         path: proxmark3.png
+      - type: file
+        path: se.icedev.pm3.metainfo.xml
     build-commands:
       - 'mkdir -p ${FLATPAK_DEST}/share/applications/'
       - 'mkdir -p ${FLATPAK_DEST}/share/icons/hicolor/256x256/apps/'
       - 'install -m644 proxmark3.desktop ${FLATPAK_DEST}/share/applications/'
       - 'install -m644 proxmark3.png ${FLATPAK_DEST}/share/icons/hicolor/256x256/apps/'
+      - 'install -Dm644 -t ${FLATPAK_DEST}/share/metainfo se.icedev.pm3.metainfo.xml'
